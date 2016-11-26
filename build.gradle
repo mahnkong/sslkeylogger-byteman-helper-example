@@ -1,0 +1,59 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
+
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+ext {
+    bytemanVersion = '3.0.6'
+    undertowVersion = '1.4.6.Final'
+    sslKeyLoggerHelperVersion = '1.0.0-SNAPSHOT'
+    extractedDir = "$buildDir/extracted"
+}
+
+configurations {
+    byteman 
+    sslKeyLoggerHelper
+}
+
+dependencies {
+    byteman "org.jboss.byteman:byteman-download:${bytemanVersion}:bin@zip"
+    sslKeyLoggerHelper "org.mahnkong:sslkeylogger-byteman-helper:${sslKeyLoggerHelperVersion}"
+    compile "io.undertow:undertow-core:${undertowVersion}"
+    compile "io.undertow:undertow-servlet:${undertowVersion}"
+    compile "io.undertow:undertow-websockets-jsr:${undertowVersion}"
+    testCompile 'junit:junit:4.12'
+}
+
+task prepareByteman {
+    doFirst {
+        copy {
+            from zipTree (configurations.byteman.files.first())
+            into extractedDir
+        }
+        copy {
+            from zipTree (configurations.sslKeyLoggerHelper.files.first())
+            into extractedDir
+            include 'ssl_keylogger.btm'
+        }
+    }
+}
+
+task runClientWithSSLKeyLogging(type: JavaExec) {
+    dependsOn("prepareByteman", "shadowJar")
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'org.mahnkong.byteman.helper.sslkeylogger.examples.HTTPSClient'
+    jvmArgs "-Dorg.jboss.byteman.transform.all", "-javaagent:${extractedDir}/byteman-download-${bytemanVersion}/lib/byteman.jar=script:${extractedDir}/ssl_keylogger.btm,boot:${extractedDir}/byteman-download-${bytemanVersion}/lib/byteman.jar,boot:${configurations.sslKeyLoggerHelper.files.first()}"
+    args "${System.properties.containsKey("HTTPS_SERVER_URL") ? System.getProperty("HTTPS_SERVER_URL") : ""}"
+}

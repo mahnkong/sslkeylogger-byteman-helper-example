@@ -18,7 +18,7 @@ repositories {
 ext {
     bytemanVersion = '3.0.6'
     undertowVersion = '1.4.6.Final'
-    sslKeyLoggerHelperVersion = '1.0.0-SNAPSHOT'
+    sslKeyLoggerHelperVersion = '1.0.1-SNAPSHOT'
     extractedDir = "$buildDir/extracted"
 }
 
@@ -29,7 +29,7 @@ configurations {
 
 dependencies {
     byteman "org.jboss.byteman:byteman-download:${bytemanVersion}:bin@zip"
-    sslKeyLoggerHelper "org.mahnkong:sslkeylogger-byteman-helper:${sslKeyLoggerHelperVersion}"
+    sslKeyLoggerHelper "com.github.mahnkong:sslkeylogger-byteman-helper:${sslKeyLoggerHelperVersion}"
     compile "io.undertow:undertow-core:${undertowVersion}"
     compile "io.undertow:undertow-servlet:${undertowVersion}"
     compile "io.undertow:undertow-websockets-jsr:${undertowVersion}"
